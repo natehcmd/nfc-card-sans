@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sanskriti Baranwal — JOV AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: radial-gradient(ellipse at center, #1c1c1c 0%, #090909 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      font-family: 'Montserrat', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .scene {
+      perspective: 1000px;
+      cursor: grab;
+    }
+    .scene.dragging { cursor: grabbing; }
+
+    /* Card */
+    .card-3d {
+      position: relative;
+      width: min(86vw, 460px);
+      aspect-ratio: 1.75;
+      border-radius: 14px;
+      transform-style: preserve-3d;
+      will-change: transform;
+      overflow: hidden;
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      background: #1a1a1a;
+      border-radius: 14px;
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+    }
+
+    /* Network corner SVGs */
+    .net {
+      position: absolute;
+      width: 42%;
+      height: 70%;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+    .net-tl { top: 0; left: 0; }
+    .net-br { bottom: 0; right: 0; transform: rotate(180deg); }
+
+    /* Gold border */
+    .card-border {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      border: 1px solid #3a3010;
+      pointer-events: none;
+    }
+
+    /* Content layout */
+    .card-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6% 8%;
+      gap: 0;
+    }
+
+    .logo {
+      font-size: clamp(22px, 5vw, 32px);
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      line-height: 1;
+      margin-bottom: 4%;
+    }
+    .logo .jov {
+      background: linear-gradient(170deg, #7a5000 0%, #c9950a 20%, #e8c050 42%, #fff0a0 50%, #e8c050 60%, #c9950a 80%, #7a5000 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .logo .i-part {
+      background: linear-gradient(170deg, #444 0%, #999 25%, #ddd 45%, #eee 50%, #ddd 60%, #999 80%, #444 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .rule {
+      width: 70%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #c9950a, transparent);
+      margin-bottom: 4%;
+      opacity: 0.6;
+    }
+
+    .name {
+      font-size: clamp(11px, 2.4vw, 16px);
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #d4a030;
+      text-align: center;
+      margin-bottom: 2%;
+    }
+    .title {
+      font-size: clamp(8px, 1.6vw, 11px);
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #888;
+      text-align: center;
+      margin-bottom: 5%;
+    }
+
+    .contacts {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5%;
+      align-self: flex-start;
+      padding-left: 4%;
+    }
+    .company-name {
+      font-size: clamp(8px, 1.6vw, 11px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #c9950a;
+      margin-bottom: 2%;
+    }
+    .row {
+      display: flex;
+      gap: 6px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .row:hover { opacity: 0.7; }
+    .lbl {
+      font-size: clamp(7px, 1.4vw, 10px);
+      font-weight: 700;
+      color: #bbb;
+      min-width: 20px;
+      letter-spacing: 0.04em;
+    }
+    .val {
+      font-size: clamp(7px, 1.4vw, 10px);
+      font-weight: 300;
+      color: #ccc;
+      letter-spacing: 0.02em;
+    }
+
+    /* Shine overlay */
+    .shine {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.12) 0%, transparent 60%);
+      mix-blend-mode: screen;
+    }
+
+    /* Save button */
+    .save-btn {
+      width: min(86vw, 460px);
+      padding: 15px;
+      border: none;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #7a5500 0%, #c9950a 30%, #e8c050 55%, #c9950a 75%, #7a5500 100%);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #111;
+      cursor: pointer;
+      box-shadow: 0 4px 28px rgba(201,149,10,0.3);
+      transition: filter 0.2s, transform 0.15s;
+    }
+    .save-btn:hover  { filter: brightness(1.1); transform: translateY(-2px); }
+    .save-btn:active { transform: translateY(0); filter: brightness(0.95); }
+
+    .hint {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: #2a2a2a;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scene" id="scene">
+    <div class="card-3d" id="card">
+      <div class="card-face">
+
+        <!-- Corner network patterns -->
+        <svg class="net net-tl" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="100" x2="70" y2="40" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="70" y1="40" x2="140" y2="90" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="70" y1="40" x2="55" y2="130" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="0" y1="100" x2="55" y2="130" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="55" y1="130" x2="140" y2="90" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="140" y1="90" x2="190" y2="30" stroke="#C9950A" stroke-width="0.6"/>
+          <line x1="55" y1="130" x2="35" y2="210" stroke="#C9950A" stroke-width="0.6"/>
+          <line x1="140" y1="90" x2="170" y2="160" stroke="#C9950A" stroke-width="0.5"/>
+          <line x1="70" y1="40" x2="110" y2="0" stroke="#C9950A" stroke-width="0.5"/>
+          <circle cx="70" cy="40" r="3.5" fill="#C9950A" opacity="0.9"/>
+          <circle cx="140" cy="90" r="3" fill="#C9950A" opacity="0.7"/>
+          <circle cx="55" cy="130" r="3" fill="#C9950A" opacity="0.6"/>
+          <circle cx="0" cy="100" r="2.5" fill="#C9950A" opacity="0.5"/>
+          <circle cx="190" cy="30" r="2" fill="#C9950A" opacity="0.4"/>
+          <circle cx="35" cy="210" r="2" fill="#C9950A" opacity="0.3"/>
+          <circle cx="170" cy="160" r="2" fill="#C9950A" opacity="0.3"/>
+        </svg>
+
+        <svg class="net net-br" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="100" x2="70" y2="40" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="70" y1="40" x2="140" y2="90" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="70" y1="40" x2="55" y2="130" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="0" y1="100" x2="55" y2="130" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="55" y1="130" x2="140" y2="90" stroke="#C9950A" stroke-width="0.8"/>
+          <line x1="140" y1="90" x2="190" y2="30" stroke="#C9950A" stroke-width="0.6"/>
+          <line x1="55" y1="130" x2="35" y2="210" stroke="#C9950A" stroke-width="0.6"/>
+          <line x1="140" y1="90" x2="170" y2="160" stroke="#C9950A" stroke-width="0.5"/>
+          <circle cx="70" cy="40" r="3.5" fill="#C9950A" opacity="0.9"/>
+          <circle cx="140" cy="90" r="3" fill="#C9950A" opacity="0.7"/>
+          <circle cx="55" cy="130" r="3" fill="#C9950A" opacity="0.6"/>
+          <circle cx="0" cy="100" r="2.5" fill="#C9950A" opacity="0.5"/>
+          <circle cx="190" cy="30" r="2" fill="#C9950A" opacity="0.4"/>
+          <circle cx="35" cy="210" r="2" fill="#C9950A" opacity="0.3"/>
+          <circle cx="170" cy="160" r="2" fill="#C9950A" opacity="0.3"/>
+        </svg>
+
+        <div class="card-content">
+          <div class="logo">
+            <span class="jov">JOVAi</span>
+          </div>
+          <div class="rule"></div>
+          <div class="name">Sanskriti Baranwal</div>
+          <div class="title">Jr. Code Developer</div>
+          <div class="contacts">
+            <div class="company-name">JOV AI</div>
+            <a class="row" href="tel:+18582959271">
+              <span class="lbl">T:</span><span class="val">858.295.9271</span>
+            </a>
+            <a class="row" href="mailto:sans@jov.ai">
+              <span class="lbl">E:</span><span class="val">sans@jov.ai</span>
+            </a>
+            <a class="row" href="https://www.linkedin.com/in/sanskritib" target="_blank" rel="noopener">
+              <span class="lbl">Li:</span><span class="val">linkedin.com/in/sanskritib</span>
+            </a>
+            <a class="row" href="https://jov.ai" target="_blank" rel="noopener">
+              <span class="lbl">W:</span><span class="val">jov.ai</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="shine" id="shine"></div>
+      </div>
+      <div class="card-border"></div>
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveContact()">Save Contact</button>
+  <div class="hint">Drag to spin</div>
+
+  <script>
+    const scene = document.getElementById('scene');
+    const card  = document.getElementById('card');
+    const shine = document.getElementById('shine');
+
+    let rotX = 5, rotY = -10;
+    let dragging = false;
+    let lastX, lastY, velX = 0, velY = 0, rafId;
+
+    function applyTransform() {
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      const sx = 50 - rotY * 1.5;
+      const sy = 50 + rotX * 1.5;
+      shine.style.background = `radial-gradient(ellipse at ${sx}% ${sy}%, rgba(255,255,255,0.12) 0%, transparent 60%)`;
+    }
+
+    scene.addEventListener('pointerdown', e => {
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      velX = velY = 0; scene.classList.add('dragging');
+      cancelAnimationFrame(rafId); e.preventDefault();
+    });
+
+    window.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY; velX = dx; velY = dy;
+      rotY = Math.max(-45, Math.min(45, rotY + dx * 0.4));
+      rotX = Math.max(-30, Math.min(30, rotX - dy * 0.4));
+      applyTransform();
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!dragging) return;
+      dragging = false; scene.classList.remove('dragging'); coast();
+    });
+
+    function coast() {
+      if (Math.abs(velX) < 0.2 && Math.abs(velY) < 0.2) return;
+      velX *= 0.92; velY *= 0.92;
+      rotY = Math.max(-45, Math.min(45, rotY + velX * 0.4));
+      rotX = Math.max(-30, Math.min(30, rotX - velY * 0.4));
+      applyTransform(); rafId = requestAnimationFrame(coast);
+    }
+
+    applyTransform();
+
+    function saveContact() {
+      const vcard = [
+        'BEGIN:VCARD', 'VERSION:3.0',
+        'FN:Sanskriti Baranwal', 'N:Baranwal;Sanskriti;;;',
+        'ORG:JOV AI', 'TITLE:Jr. Code Developer',
+        'TEL;TYPE=CELL:+18582959271',
+        'EMAIL;TYPE=WORK:sans@jov.ai',
+        'URL:https://jov.ai',
+        'X-SOCIALPROFILE;type=linkedin:https://www.linkedin.com/in/sanskritib',
+        'END:VCARD'
+      ].join('\r\n');
+      const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'Sanskriti-Baranwal.vcf';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
